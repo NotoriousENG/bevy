@@ -61,6 +61,7 @@ pub trait CameraProjection {
     fn get_projection_matrix(&self) -> Mat4;
     fn update(&mut self, width: f32, height: f32);
     fn far(&self) -> f32;
+    fn use_far_culling(&self) -> bool;
 }
 
 /// A configurable [`CameraProjection`] that can select its projection type at runtime.
@@ -104,6 +105,13 @@ impl CameraProjection for Projection {
             Projection::Orthographic(projection) => projection.far(),
         }
     }
+
+    fn use_far_culling(&self) -> bool {
+        match self {
+            Projection::Perspective(projection) => projection.use_far_culling(),
+            Projection::Orthographic(projection) => projection.use_far_culling(),
+        }
+    }
 }
 
 impl Default for Projection {
@@ -142,6 +150,13 @@ pub struct PerspectiveProjection {
     ///
     /// Defaults to a value of `1000.0`.
     pub far: f32,
+
+    // If true, the far plane will be used for culling. If false, the far plane will be ignored.
+    ///
+    /// If true, objects farther from the camera than the far value will not be visible.
+    ///
+    /// Defaults to a value of `false`.
+    pub use_far_culling: bool,
 }
 
 impl CameraProjection for PerspectiveProjection {
@@ -156,6 +171,10 @@ impl CameraProjection for PerspectiveProjection {
     fn far(&self) -> f32 {
         self.far
     }
+
+    fn use_far_culling(&self) -> bool {
+        self.use_far_culling
+    }
 }
 
 impl Default for PerspectiveProjection {
@@ -165,6 +184,7 @@ impl Default for PerspectiveProjection {
             near: 0.1,
             far: 1000.0,
             aspect_ratio: 1.0,
+            use_far_culling: false,
         }
     }
 }
@@ -215,6 +235,12 @@ pub struct OrthographicProjection {
     ///
     /// Defaults to `1000.0`
     pub far: f32,
+    // If true, the far plane will be used for culling. If false, the far plane will be ignored.
+    ///
+    /// If true, objects farther from the camera than the far value will not be visible.
+    ///
+    /// Defaults to a value of `false`.
+    pub use_far_culling: bool,
     /// Specifies the origin of the viewport as a normalized position from 0 to 1, where (0, 0) is the bottom left
     /// and (1, 1) is the top right. This determines where the camera's position sits inside the viewport.
     ///
@@ -312,6 +338,10 @@ impl CameraProjection for OrthographicProjection {
     fn far(&self) -> f32 {
         self.far
     }
+
+    fn use_far_culling(&self) -> bool {
+        self.use_far_culling
+    }
 }
 
 impl Default for OrthographicProjection {
@@ -323,6 +353,7 @@ impl Default for OrthographicProjection {
             viewport_origin: Vec2::new(0.5, 0.5),
             scaling_mode: ScalingMode::WindowSize(1.0),
             area: Rect::new(-1.0, -1.0, 1.0, 1.0),
+            use_far_culling: false,
         }
     }
 }
